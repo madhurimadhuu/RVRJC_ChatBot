@@ -1,7 +1,0 @@
-Flask
-flask-cors
-nltk
-torch
-sentence-transformers
-beautifulsoup4
-requests
