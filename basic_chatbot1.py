@@ -977,6 +977,7 @@ def chat():
         logging.error(f"Error in /chat endpoint: {str(e)}")
         return jsonify({'response': f"Oops, something went wrong! But RVR & JC is still awesome—try asking about college facilities or sports. 😊"})
 
-if __name__ == '__main__':
-    load_knowledge_base()
-    app.run(debug=True)
+if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
