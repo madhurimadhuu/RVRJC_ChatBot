@@ -28,8 +28,7 @@ nltk.download('vader_lexicon', quiet=True)
 analyzer = SentimentIntensityAnalyzer()
 
 # Initialize SentenceTransformer model
-model = SentenceTransformer('all-MiniLM-L6-v2')
-
+model = SentenceTransformer("distilbert-base-nli-stsb-mean-tokens")
 # Global variables
 knowledge_base = {}
 dynamic_json_data = {}
