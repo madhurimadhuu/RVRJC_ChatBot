@@ -1,7 +1,7 @@
 Flask
 flask-cors
 nltk
-torch==2.0.1
+torch==2.0.1 --extra-index-url https://download.pytorch.org/whl/cpu
 sentence-transformers
 beautifulsoup4
 requests
