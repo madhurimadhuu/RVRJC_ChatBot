@@ -6,11 +6,12 @@ import logging
 from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
-from sentence_transformers import SentenceTransformer, util
-import torch
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import os
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -27,14 +28,13 @@ logging.basicConfig(
 nltk.download('vader_lexicon', quiet=True)
 analyzer = SentimentIntensityAnalyzer()
 
-# Initialize SentenceTransformer model
-model = SentenceTransformer("distilbert-base-nli-stsb-mean-tokens")
 # Global variables
 knowledge_base = {}
 dynamic_json_data = {}
 placement_data = {}
 session_context = {}
-kb_embeddings = None
+vectorizer = None
+tfidf_matrix = None
 kb_keys = []
 
 # Greetings and farewells with emojis
@@ -84,38 +84,45 @@ keywords = {
 }
 
 def load_knowledge_base():
-    global knowledge_base, dynamic_json_data, placement_data, kb_embeddings, kb_keys
+    global knowledge_base, dynamic_json_data, placement_data, vectorizer, tfidf_matrix, kb_keys
     try:
         # Load static data
-        with open('RVRJC_static.json', 'r', encoding='utf-8') as f:
-            static_data = json.load(f)
-        for key, value in static_data.items():
-            if isinstance(value, list):
-                knowledge_base[key] = "; ".join(value)
-            else:
-                knowledge_base[key] = value
-        logging.debug(f"Static data keys: {list(knowledge_base.keys())}")
+        if not os.path.exists('RVRJC_static.json'):
+            logging.error("RVRJC_static.json not found, initializing empty knowledge base")
+            knowledge_base = {}
+        else:
+            with open('RVRJC_static.json', 'r', encoding='utf-8') as f:
+                static_data = json.load(f)
+            for key, value in static_data.items():
+                if isinstance(value, list):
+                    knowledge_base[key] = "; ".join(value)
+                else:
+                    knowledge_base[key] = value
+            logging.debug(f"Static data keys: {list(knowledge_base.keys())}")
         
         # Load dynamic data
-        try:
+        if not os.path.exists('RVRJC_dynamic.json'):
+            logging.warning("RVRJC_dynamic.json not found, initializing empty dynamic data")
+            dynamic_json_data = {}
+        else:
             with open('RVRJC_dynamic.json', 'r', encoding='utf-8') as f:
                 dynamic_json_data.update(json.load(f))
             logging.debug(f"Dynamic data loaded: {list(dynamic_json_data.keys())}")
-        except FileNotFoundError:
-            logging.error("RVRJC_dynamic.json not found")
         
         # Load placement data
-        try:
+        if not os.path.exists('RVRJC_Placement_Data.json'):
+            logging.warning("RVRJC_Placement_Data.json not found, initializing empty placement data")
+            placement_data = {}
+        else:
             with open('RVRJC_Placement_Data.json', 'r', encoding='utf-8') as f:
                 placement_data.update(json.load(f))
             logging.debug(f"Placement data loaded: {list(placement_data.keys())}")
-        except FileNotFoundError:
-            logging.error("RVRJC_Placement_Data.json not found")
         
         kb_keys = list(knowledge_base.keys())
         if kb_keys:
-            kb_embeddings = model.encode(kb_keys, convert_to_tensor=True)
-            logging.info("Knowledge base embeddings created")
+            vectorizer = TfidfVectorizer()
+            tfidf_matrix = vectorizer.fit_transform(kb_keys)
+            logging.info("TF-IDF matrix created")
     except Exception as e:
         logging.error(f"Error loading knowledge base: {str(e)}")
 
@@ -717,7 +724,7 @@ def find_answer(user_message, session_id):
                 break
         if matched_category == "placement_cell_head" or ("head" in prev_query and "placement" in prev_query):
             response = handle_placement_query(prev_query, "placement_cell_head", None, None)
-            response = f"{response} 💼"
+            response += " 💼"
             logging.debug(f"Follow-up placement cell head response: {response}")
             return f"Glad you're excited! {response}" if sentiment > 0.4 else response
         elif matched_category in ["placements", "placement_head", "companies_visited"]:
@@ -732,7 +739,7 @@ def find_answer(user_message, session_id):
                     department = dept
                     break
             response = handle_placement_query(prev_query, matched_category, year, department)
-            response = f"{response} 💼"
+            response += " 💼"
             logging.debug(f"Follow-up placement response: {response}")
             return f"Glad you're excited! {response}" if sentiment > 0.4 else response
         elif matched_category == "food":
@@ -791,24 +798,25 @@ def find_answer(user_message, session_id):
                     query = "What are the hostel fees at RVR & JC College"
             elif "timing" in prev_query or "timings" in prev_query or "schedule" in prev_query:
                 query = "What are the hostel timings at RVR & JC College"
-            elif "food" in prev_query or "mess" in prev_query or "menu" in prev_query:
-                query = "What types of food are provided in the hostels at RVR & JC College"
-            elif "rules" in prev_query or "regulation" in prev_query or "discipline" in prev_query:
+            elif "food" in prev_query or "menu" in query_clean or "mess" in query:
+            query_clean = "What are the types of food are provided in the hostels at RVR & JC College"
+            logging.debug(f"Follow-up hostel query mapped to: {query}")
+        elif "rules" in prev_query or "regulation" in prev_query or "discipline" in query_clean:
                 query = "What are the hostel rules at RVR & JC College"
             elif "facility" in prev_query or "facilities" in prev_query:
                 query = "What are the hostel facilities at RVR & JC College"
             else:
                 query = "What are the hostel facilities at RVR & JC College"
-            logging.debug(f"Follow-up hostel query mapped to: {query}")
+            logging.debug(f"Follow-up hostel query mapped to: {query})
         elif matched_category == "fees":
             logging.debug(f"Processing follow-up fee query: {prev_query}")
-            if "department-wise tuition fee" in prev_query or "management fee" in prev_query or any(k in prev_query for k in ["-btech fee", "mtech fee", "mca fee", "mba fee", "department wise fee"]):
-                query = "What is the department-wise tuition fee and management fee at RVR & JC College"
-            elif "hostel fee for boys" in prev_query:
+            if "department-wise" tuition fee in prev_query or "management fee" in prev_query or any(k in prev_query for k in ["btech fee", "mtech fee", "mca fee", "mba fee", "department wise fee"]):
+                query = "What is the department-wise tuition fee and management fees at RVR & JC College"
+            elif "hostel fee for boys" for boys" in prev_query:
                 query = "What is the hostel fee for boys at RVR & JC College"
-            elif "hostel fee for girls" in prev_query:
+            elif "hostel fee for girls" for girls in prev_query:
                 query = "What is the hostel fee for girls at RVR & JC College"
-            elif "transportation fees" in prev_query:
+            elif "transportation fees" fees in prev_query:
                 query = "What are the transportation fees at RVR & JC College"
             elif "hostel fees" in prev_query:
                 query = "What are the hostel fees at RVR & JC College"
@@ -942,11 +950,11 @@ def find_answer(user_message, session_id):
         logging.warning(f"Query not found in knowledge_base: {query}")
 
     # Similarity matching
-    if kb_keys:
-        query_embedding = model.encode(query_clean, convert_to_tensor=True)
-        scores = util.cos_sim(query_embedding, kb_embeddings)[0]
-        top_index = scores.argmax().item()
-        top_score = scores[top_index].item()
+    if kb_keys and vectorizer and tfidf_matrix is not None:
+        query_tfidf = vectorizer.transform([query_clean])
+        scores = cosine_similarity(query_tfidf, tfidf_matrix)[0]
+        top_index = np.argmax(scores)
+        top_score = scores[top_index]
         logging.debug(f"Similarity top match: {kb_keys[top_index]}, Score: {top_score}")
         if top_score > 0.3:
             matched_key = kb_keys[top_index]
@@ -977,13 +985,14 @@ def chat():
         logging.error(f"Error in /chat endpoint: {str(e)}")
         return jsonify({'response': f"Oops, something went wrong! But RVR & JC is still awesome—try asking about college facilities or sports. 😊"})
 
-# Initialize model and knowledge base
-try:
-    model = SentenceTransformer("distilbert-base-nli-stsb-mean-tokens")
-    load_knowledge_base()
-    logging.info("Model and knowledge base initialized successfully")
-except Exception as e:
-    logging.error(f"Failed to initialize model or knowledge base: {str(e)}")
-    raise
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({'status': 'healthy'}), 200
 
-# No need for app.run since waitress is used in production
+# Initialize at startup
+try:
+    load_knowledge_base()
+    logging.info("Knowledge base initialized successfully")
+except Exception as e:
+    logging.error(f"Failed to initialize knowledge base: {str(e)}")
+    raise
