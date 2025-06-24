@@ -799,9 +799,9 @@ def find_answer(user_message, session_id):
             elif "timing" in prev_query or "timings" in prev_query or "schedule" in prev_query:
                 query = "What are the hostel timings at RVR & JC College"
             elif "food" in prev_query or "menu" in query_clean or "mess" in query:
-            query_clean = "What are the types of food are provided in the hostels at RVR & JC College"
-            logging.debug(f"Follow-up hostel query mapped to: {query}")
-        elif "rules" in prev_query or "regulation" in prev_query or "discipline" in query_clean:
+                query_clean = "What are the types of food are provided in the hostels at RVR & JC College"
+            
+            elif "rules" in prev_query or "regulation" in prev_query or "discipline" in query_clean:
                 query = "What are the hostel rules at RVR & JC College"
             elif "facility" in prev_query or "facilities" in prev_query:
                 query = "What are the hostel facilities at RVR & JC College"
