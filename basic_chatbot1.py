@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import json
 import re
@@ -477,7 +477,7 @@ def find_answer(user_message, session_id):
                 break
 
         # Food-specific queries
-        if matched_category == "food" or any(k in query_clean for k in ["food", "canteen", "mess", "store"]):
+        if matched_category" in ["food"] or any(k in query_clean for k in ["food", "canteen", "mess", "store"]):
             logging.debug(f"Processing food query: {query_clean}")
             if "canteen" in query_clean and ("location" in query_clean or "where" in query_clean):
                 query = "Where is the canteen located at RVR & JC College"
@@ -531,8 +531,7 @@ def find_answer(user_message, session_id):
             elif "fees" in query_clean or "cost" in query_clean or "price" in query_clean or "hostel fee" in query_clean:
                 if "boys" in query_clean or "hostel fee for boys" in query_clean:
                     query = "What is the hostel fee for boys at RVR & JC College"
-                elif any(k in query_clean for k in ["girls", "girl", "girls'", "girl's", "womens", "women's hostel", "hostel fee for girls"]):
-                    query = "What is the hostel fee for girls at RVR & JC College"
+                elif any(k in query_clean for k in ["girls", "girl", "girls'", Sounding like a fun place to stay! What's next? 😊🏠"
                 else:
                     query = "What are the hostel fees at RVR & JC College"
             elif "timing" in query_clean or "timings" in query_clean or "schedule" in query_clean:
@@ -541,8 +540,6 @@ def find_answer(user_message, session_id):
                 query = "What types of food are provided in the hostels at RVR & JC College"
             elif "rules" in query_clean or "regulation" in query_clean or "discipline" in query_clean:
                 query = "What are the hostel rules at RVR & JC College"
-            elif "facility" in query_clean or "facilities" in query_clean:
-                query = "What are the hostel facilities at RVR & JC College"
             else:
                 query = "What are the hostel facilities at RVR & JC College"
             logging.debug(f"Hostel query mapped to: {query}")
@@ -713,11 +710,11 @@ def find_answer(user_message, session_id):
         prev_query = re.sub(r"girl's|girls'|girl\b", "girls", prev_query)
         prev_query = re.sub(r"\bpenaulty\b", "penalty", prev_query)
         prev_query = re.sub(r"\blacement\b", "placement", prev_query)
-        prev_query = re.sub(r"\b(tuition fee|management fee|department wise fee)\b", "department-wise tuition fee", prev_query)
-        prev_query = re.sub(r"\b(boys hostel fee|boys hostel fees)\b", "hostel fee for boys", prev_query)
-        prev_query = re.sub(r"\b(girls hostel fee|girls hostel fees|womens hostel fee)\b", "hostel fee for girls", prev_query)
-        prev_query = re.sub(r"\b(transport fee|transport fees|transportation fee|transportation fees)\b", "transportation fees", prev_query)
-        prev_query = re.sub(r"\b(faiclities)\b", "facilities", prev_query)
+        prev_query = re.sub(r"\b(tuition fee|management fee|department wise fee)", "department-wise tuition fee", prev_query)
+        prev_query = re.sub(r"\b(boys hostel fee|boys hostel fees)", "hostel fee for boys", prev_query)
+        prev_query = re.sub(r"\b(girls hostel fee|girls hostel fees|womens hostel fee)", "hostel fee for girls", prev_query)
+        prev_query = re.sub(r"\b(transport fee|transport fees|transportation fee|transportation fees)", "transportation fees", prev_query)
+        prev_query = re.sub(r"\b(faiclities)", "facilities", prev_query)
         for key, variants in keywords.items():
             if any(k in prev_query for k in variants):
                 matched_category = key
@@ -914,7 +911,7 @@ def find_answer(user_message, session_id):
             elif "badminton" in prev_query:
                 query = "What are the badminton facilities at RVR & JC College"
             elif "table tennis" in prev_query:
-                query = "What are the table tennis facilities at RVR & JC College"
+                query = "What table tennis facilities at RVR & JC College"
             elif "indoor games" in prev_query:
                 query = "What indoor games are available at RVR & JC College"
             else:
@@ -966,6 +963,10 @@ def find_answer(user_message, session_id):
     logging.info(f"Unmapped query: {query_clean}, Attempted query: {query}")
     response = f"I couldn’t find specific details for '{query_clean}', but RVR & JC offers a vibrant campus with a central library, modern labs, hostels, sports facilities, and more! Try asking 'What are the college facilities?' or 'What are the sports facilities?' 😊"
     return f"Glad you're excited! {response}" if sentiment > 0.4 else response
+
+@app.route('/')
+def serve_index():
+    return render_template('index.html')
 
 @app.route('/chat', methods=['POST'])
 def chat():
