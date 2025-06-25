@@ -54,9 +54,9 @@ farewells = {
 keywords = {
     "history": ["history", "founded", "established"],
     "safety": ["safety", "security", "safe"],
+    "transportation": ["transport", "transportation", "bus", "buses"],
     "programs": ["program", "programs", "course", "courses", "btech", "mtech", "mba", "mca"],
     "admission": ["admission", "admissions", "process", "apply"],
-    "transportation": ["transport", "transportation", "bus", "buses"],
     "placements": ["placement", "placements", "job", "jobs", "recruitment", "lacement"],
     "placement_years": ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
     "placement_departments": ["cse", "csd", "csbs", "ece", "eee", "it", "mechanical", "civil", "chemical", "mca", "mba"],
