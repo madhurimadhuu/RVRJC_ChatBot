@@ -477,7 +477,7 @@ def find_answer(user_message, session_id):
                 break
 
         # Food-specific queries
-        if matched_category" in ["food"] or any(k in query_clean for k in ["food", "canteen", "mess", "store"]):
+        if matched_category == "food" or any(k in query_clean for k in ["food", "canteen", "mess", "store"]):
             logging.debug(f"Processing food query: {query_clean}")
             if "canteen" in query_clean and ("location" in query_clean or "where" in query_clean):
                 query = "Where is the canteen located at RVR & JC College"
@@ -531,7 +531,8 @@ def find_answer(user_message, session_id):
             elif "fees" in query_clean or "cost" in query_clean or "price" in query_clean or "hostel fee" in query_clean:
                 if "boys" in query_clean or "hostel fee for boys" in query_clean:
                     query = "What is the hostel fee for boys at RVR & JC College"
-                elif any(k in query_clean for k in ["girls", "girl", "girls'", Sounding like a fun place to stay! What's next? 😊🏠"
+                elif any(k in query_clean for k in ["girls", "girl", "girls'", "girl's", "womens", "women's hostel"]):
+                    query = "What is the hostel fee for girls at RVR & JC College"
                 else:
                     query = "What are the hostel fees at RVR & JC College"
             elif "timing" in query_clean or "timings" in query_clean or "schedule" in query_clean:
