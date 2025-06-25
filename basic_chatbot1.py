@@ -798,25 +798,24 @@ def find_answer(user_message, session_id):
                     query = "What are the hostel fees at RVR & JC College"
             elif "timing" in prev_query or "timings" in prev_query or "schedule" in prev_query:
                 query = "What are the hostel timings at RVR & JC College"
-            elif "food" in prev_query or "menu" in query_clean or "mess" in query:
-                query_clean = "What are the types of food are provided in the hostels at RVR & JC College"
-            
-            elif "rules" in prev_query or "regulation" in prev_query or "discipline" in query_clean:
+            elif "food" in prev_query or "menu" in prev_query or "mess" in prev_query:
+                query = "What types of food are provided in the hostels at RVR & JC College"
+            elif "rules" in prev_query or "regulation" in prev_query or "discipline" in prev_query:
                 query = "What are the hostel rules at RVR & JC College"
             elif "facility" in prev_query or "facilities" in prev_query:
                 query = "What are the hostel facilities at RVR & JC College"
             else:
                 query = "What are the hostel facilities at RVR & JC College"
-            logging.debug(f"Follow-up hostel query mapped to: {query})
+            logging.debug(f"Follow-up hostel query mapped to: {query}")
         elif matched_category == "fees":
             logging.debug(f"Processing follow-up fee query: {prev_query}")
-            if "department-wise" tuition fee in prev_query or "management fee" in prev_query or any(k in prev_query for k in ["btech fee", "mtech fee", "mca fee", "mba fee", "department wise fee"]):
-                query = "What is the department-wise tuition fee and management fees at RVR & JC College"
-            elif "hostel fee for boys" for boys" in prev_query:
+            if "department-wise tuition fee" in prev_query or "management fee" in prev_query or any(k in prev_query for k in ["btech fee", "mtech fee", "mca fee", "mba fee", "department wise fee"]):
+                query = "What is the department-wise tuition fee and management fee at RVR & JC College"
+            elif "hostel fee for boys" in prev_query:
                 query = "What is the hostel fee for boys at RVR & JC College"
-            elif "hostel fee for girls" for girls in prev_query:
+            elif "hostel fee for girls" in prev_query:
                 query = "What is the hostel fee for girls at RVR & JC College"
-            elif "transportation fees" fees in prev_query:
+            elif "transportation fees" in prev_query:
                 query = "What are the transportation fees at RVR & JC College"
             elif "hostel fees" in prev_query:
                 query = "What are the hostel fees at RVR & JC College"
