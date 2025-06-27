@@ -95,6 +95,7 @@
       display: flex;
       border-top: 1px solid #ddd;
       background-color: #f0f0f0;
+      align-items: center;
     }
 
     .input-container input {
@@ -120,10 +121,27 @@
       background: linear-gradient(to right, #075e54, #128c7e);
     }
 
+    .input-container .audio-btn, .input-container .mic-btn {
+      padding: 14px;
+      font-size: 20px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      transition: transform 0.2s;
+    }
+
+    .input-container .audio-btn:hover, .input-container .mic-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .input-container .mic-btn.recording {
+      color: #ff0000;
+    }
+
     .chat-toggle {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 15px;
+      right: 15px;
       background: linear-gradient(to right, #128c7e, #075e54);
       color: white;
       border-radius: 50%;
@@ -173,9 +191,13 @@
         padding: 12px;
       }
 
-      .input-container button {
+      .input-container button, .input-container .audio-btn, .input-container .mic-btn {
         font-size: 14px;
         padding: 12px 16px;
+      }
+
+      .input-container .audio-btn, .input-container .mic-btn {
+        font-size: 18px;
       }
 
       .chat-toggle {
@@ -196,7 +218,9 @@
     </div>
     <div class="chat-box" id="chat-box"></div>
     <div class="input-container">
+      <button class="audio-btn" id="audio-toggle" title="Toggle audio">🔊</button>
       <input type="text" id="user-input" placeholder="Ask about RVR & JC..." />
+      <button class="mic-btn" id="mic-btn" title="Start speech recognition">🎤</button>
       <button onclick="sendMessage()">Send</button>
     </div>
   </div>
@@ -205,7 +229,14 @@
     const chatWidget = document.getElementById("chat-widget");
     const chatBox = document.getElementById("chat-box");
     const userInput = document.getElementById("user-input");
-    const sessionId = 'session_' + Math.random().toString(36).substr(2, 9); // Unique session ID
+    const audioToggle = document.getElementById("audio-toggle");
+    const micBtn = document.getElementById("mic-btn");
+    const sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+
+    // Audio settings
+    let audioEnabled = true;
+    let recognition = null;
+    let isRecognizing = false;
 
     // Initialize chat with greeting
     function initChat() {
@@ -215,6 +246,9 @@
       greeting.innerText = "Welcome to RVR & JC College Chatbot! 😊🏫 Ask about facilities, hostels, placements, or anything else!";
       chatBox.appendChild(greeting);
       chatBox.scrollTop = chatBox.scrollHeight;
+      if (audioEnabled) {
+        speak(greeting.innerText);
+      }
     }
 
     // Toggle chat widget visibility
@@ -230,7 +264,120 @@
       chatWidget.style.display = "none";
       chatBox.innerHTML = "";
       userInput.value = "";
+      if (isRecognizing) {
+        stopRecognition();
+      }
     }
+
+    // Text-to-speech
+    function speak(text) {
+      if (!audioEnabled) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    // Toggle audio
+    audioToggle.addEventListener('click', () => {
+      audioEnabled = !audioEnabled;
+      audioToggle.innerText = audioEnabled ? '🔊' : '🔇';
+      audioToggle.title = audioEnabled ? 'Toggle audio off' : 'Toggle audio on';
+    });
+
+    // Speech recognition setup
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = true;
+      recognition.continuous = false;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        userInput.value = transcript;
+        if (event.results[0].isFinal) {
+          stopRecognition();
+          sendMessage();
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        stopRecognition();
+        const errorMessage = document.createElement("div");
+        errorMessage.classList.add("message", "bot-message");
+        errorMessage.innerText = "Sorry, I couldn't understand your speech. Try typing or check microphone permissions. 😊";
+        chatBox.appendChild(errorMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        if (audioEnabled) {
+          speak(errorMessage.innerText);
+        }
+      };
+
+      recognition.onend = () => {
+        stopRecognition();
+      };
+    }
+
+    function startRecognition() {
+      if (!recognition) {
+        const errorMessage = document.createElement("div");
+        errorMessage.classList.add("message", "bot-message");
+        errorMessage.innerText = "Speech recognition is not supported in this browser. Try typing instead! 😊";
+        chatBox.appendChild(errorMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        if (audioEnabled) {
+          speak(errorMessage.innerText);
+        }
+        return;
+      }
+      if (!isRecognizing) {
+        isRecognizing = true;
+        micBtn.innerText = '🛑';
+        micBtn.classList.add('recording');
+        micBtn.title = 'Stop speech recognition';
+        recognition.start();
+      }
+    }
+
+    function stopRecognition() {
+      if (isRecognizing && recognition) {
+        isRecognizing = false;
+        micBtn.innerText = '🎤';
+        micBtn.classList.remove('recording');
+        micBtn.title = 'Start speech recognition';
+        recognition.stop();
+      }
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (isRecognizing) {
+        stopRecognition();
+      } else {
+        startRecognition();
+      }
+    });
+
+    // Swipe-to-close
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    chatWidget.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    });
+
+    chatWidget.addEventListener('touchmove', (e) => {
+      touchEndY = e.touches[0].clientY;
+    });
+
+    chatWidget.addEventListener('touchend', () => {
+      const swipeDistance = touchEndY - touchStartY;
+      if (swipeDistance > 100) { // Swipe down threshold
+        closeChat();
+      }
+    });
 
     // Send message to backend
     async function sendMessage() {
@@ -244,9 +391,11 @@
       chatBox.appendChild(userMessage);
       chatBox.scrollTop = chatBox.scrollHeight;
 
-      // Disable input and button during request
+      // Disable input and buttons during request
       userInput.disabled = true;
       document.querySelector(".input-container button").disabled = true;
+      micBtn.disabled = true;
+      audioToggle.disabled = true;
 
       try {
         const response = await fetch("https://rvrjc-chatbot-cd5x.onrender.com/chat", {
@@ -267,17 +416,25 @@
         botMessage.innerText = data.response;
         chatBox.appendChild(botMessage);
         chatBox.scrollTop = chatBox.scrollHeight;
+        if (audioEnabled) {
+          speak(data.response);
+        }
       } catch (error) {
         const errorMessage = document.createElement("div");
         errorMessage.classList.add("message", "bot-message");
         errorMessage.innerText = "Oops, something went wrong! Try asking about college facilities or hostels. 😊🏫";
         chatBox.appendChild(errorMessage);
         chatBox.scrollTop = chatBox.scrollHeight;
+        if (audioEnabled) {
+          speak(errorMessage.innerText);
+        }
         console.error("Error:", error);
       } finally {
-        // Re-enable input and button
+        // Re-enable input and buttons
         userInput.disabled = false;
         document.querySelector(".input-container button").disabled = false;
+        micBtn.disabled = false;
+        audioToggle.disabled = false;
         userInput.value = "";
         userInput.focus();
       }
