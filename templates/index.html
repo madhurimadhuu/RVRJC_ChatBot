@@ -96,10 +96,13 @@
       border-top: 1px solid #ddd;
       background-color: #f0f0f0;
       align-items: center;
+      flex-wrap: nowrap;
+      overflow: visible;
     }
 
     .input-container input {
       flex-grow: 1;
+      max-width: 60%;
       padding: 14px;
       border: none;
       font-size: 16px;
@@ -108,13 +111,14 @@
     }
 
     .input-container button {
-      padding: 14px 18px;
+      padding: 12px 16px;
       border: none;
       background: linear-gradient(to right, #128c7e, #075e54);
       color: white;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       transition: background 0.2s;
+      flex-shrink: 1;
     }
 
     .input-container button:hover {
@@ -122,12 +126,13 @@
     }
 
     .input-container .audio-btn, .input-container .mic-btn {
-      padding: 14px;
-      font-size: 20px;
+      padding: 12px;
+      font-size: 16px;
       cursor: pointer;
       background: none;
       border: none;
       transition: transform 0.2s;
+      flex-shrink: 1;
     }
 
     .input-container .audio-btn:hover, .input-container .mic-btn:hover {
@@ -193,15 +198,17 @@
       .input-container input {
         font-size: 14px;
         padding: 12px;
+        max-width: 50%;
       }
 
       .input-container button, .input-container .audio-btn, .input-container .mic-btn {
-        font-size: 14px;
-        padding: 12px 14px;
+        font-size: 12px;
+        padding: 10px;
       }
 
       .input-container .audio-btn, .input-container .mic-btn {
-        font-size: 16px;
+        font-size: 14px;
+        padding: 10px;
       }
 
       .chat-toggle {
