@@ -371,25 +371,6 @@
       }
     });
 
-    // Swipe-to-close
-    let touchStartY = 0;
-    let touchEndY = 0;
-
-    chatWidget.addEventListener('touchstart', (e) => {
-      touchStartY = e.touches[0].clientY;
-    });
-
-    chatWidget.addEventListener('touchmove', (e) => {
-      touchEndY = e.touches[0].clientY;
-    });
-
-    chatWidget.addEventListener('touchend', () => {
-      const swipeDistance = touchEndY - touchStartY;
-      if (swipeDistance > 100) { // Swipe down threshold
-        closeChat();
-      }
-    });
-
     // Send message to backend
     async function sendMessage() {
       const message = userInput.value.trim();
