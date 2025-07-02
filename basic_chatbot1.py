@@ -59,7 +59,7 @@ keywords = {
     "admission": ["admission", "admissions", "process", "apply"],
     "placements": ["placement", "placements", "job", "jobs", "recruitment", "lacement"],
     "placement_years": ["2018", "2019", "2020", "2021", "2022", "2023", "2024"],
-    "placement_departments": ["cse", "csd", "csbs", "ece", "eee", "it", "mechanical", "civil", "chemical", "mca", "mba"],
+    "placement_departments": ["cse", "csd", "csbs", "ece", "eee", "it", "mechanical", "civil", "chemical", "mca", "mba", "csm", "mech"],
     "placement_head": ["highest package", "highest salary", "top package", "lowest package", "lowest salary", "average package"],
     "placement_cell_head": ["head of placement cell", "placement cell head", "head of the lacement cell"],
     "hostel": ["hostel", "hostels", "accommodation", "residence", "dormitory", "boys hostel", "girls hostel", "mens hostel", "womens hostel"],
@@ -591,6 +591,10 @@ def find_answer(user_message, session_id):
                     query = "Who is the HOD of the Information Technology department at RVR & JC College"
                 elif "mechanical" in query_clean:
                     query = "Who is the HOD of the Mechanical Engineering department at RVR & JC College"
+                elif "csm" in query_clean:
+                    query = "Who is the HOD of the Mechanical Engineering department at RVR & JC College"
+                elif "mech" in query_clean:
+                    query = "Who is the HOD of the Mechanical Engineering department at RVR & JC College"
                 elif "mca" in query_clean:
                     query = "Who is the HOD of the MCA department at RVR & JC College"
                 elif "mba" in query_clean or "management sciences" in query_clean:
@@ -615,6 +619,8 @@ def find_answer(user_message, session_id):
                 elif "it" in query_clean or "information technology" in query_clean:
                     query = "What are the laboratory facilities in the Information Technology department at RVR & JC College"
                 elif "mechanical" in query_clean:
+                    query = "What are the laboratory facilities in the Mechanical Engineering department at RVR & JC College"
+                elif "csm" in query_clean:
                     query = "What are the laboratory facilities in the Mechanical Engineering department at RVR & JC College"
                 elif "mca" in query_clean:
                     query = "What are the laboratory facilities in the MCA department at RVR & JC College"
