@@ -248,17 +248,34 @@
     let audioEnabled = true;
     let recognition = null;
     let isRecognizing = false;
+    let chatHistory = []; // Store chat messages
+    let isFirstLoad = true; // Track first load for greeting
 
-    // Initialize chat with greeting
+    // Initialize chat with greeting (only on first load)
     function initChat() {
+      if (isFirstLoad) {
+        const greeting = {
+          text: "Welcome to RVR & JC College Chatbot! 😊🏫 Ask about facilities, hostels, placements, or anything else!",
+          type: "bot-message"
+        };
+        chatHistory.push(greeting);
+        isFirstLoad = false;
+      }
+      restoreChatHistory();
+    }
+
+    // Restore chat history to chat box
+    function restoreChatHistory() {
       chatBox.innerHTML = "";
-      const greeting = document.createElement("div");
-      greeting.classList.add("message", "bot-message");
-      greeting.innerText = "Welcome to RVR & JC College Chatbot! 😊🏫 Ask about facilities, hostels, placements, or anything else!";
-      chatBox.appendChild(greeting);
+      chatHistory.forEach(message => {
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message", message.type);
+        messageElement.innerText = message.text;
+        chatBox.appendChild(messageElement);
+      });
       chatBox.scrollTop = chatBox.scrollHeight;
-      if (audioEnabled) {
-        speak(greeting.innerText);
+      if (audioEnabled && chatHistory.length === 1 && isFirstLoad === false) {
+        speak(chatHistory[0].text); // Speak greeting only on first load
       }
     }
 
@@ -273,7 +290,6 @@
     // Close chat widget
     function closeChat() {
       chatWidget.style.display = "none";
-      chatBox.innerHTML = "";
       userInput.value = "";
       if (isRecognizing) {
         stopRecognition();
@@ -317,13 +333,14 @@
       recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         stopRecognition();
-        const errorMessage = document.createElement("div");
-        errorMessage.classList.add("message", "bot-message");
-        errorMessage.innerText = "Sorry, I couldn't understand your speech. Try typing or check microphone permissions. 😊";
-        chatBox.appendChild(errorMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const errorMessage = {
+          text: "Sorry, I couldn't understand your speech. Try typing or check microphone permissions. 😊",
+          type: "bot-message"
+        };
+        chatHistory.push(errorMessage);
+        restoreChatHistory();
         if (audioEnabled) {
-          speak(errorMessage.innerText);
+          speak(errorMessage.text);
         }
       };
 
@@ -334,13 +351,14 @@
 
     function startRecognition() {
       if (!recognition) {
-        const errorMessage = document.createElement("div");
-        errorMessage.classList.add("message", "bot-message");
-        errorMessage.innerText = "Speech recognition is not supported in this browser. Try typing instead! 😊";
-        chatBox.appendChild(errorMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const errorMessage = {
+          text: "Speech recognition is not supported in this browser. Try typing instead! 😊",
+          type: "bot-message"
+        };
+        chatHistory.push(errorMessage);
+        restoreChatHistory();
         if (audioEnabled) {
-          speak(errorMessage.innerText);
+          speak(errorMessage.text);
         }
         return;
       }
@@ -376,12 +394,10 @@
       const message = userInput.value.trim();
       if (!message) return;
 
-      // Add user message
-      const userMessage = document.createElement("div");
-      userMessage.classList.add("message", "user-message");
-      userMessage.innerText = message;
-      chatBox.appendChild(userMessage);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      // Add user message to history
+      const userMessage = { text: message, type: "user-message" };
+      chatHistory.push(userMessage);
+      restoreChatHistory();
 
       // Disable input and buttons during request
       userInput.disabled = true;
@@ -403,22 +419,21 @@
         }
 
         const data = await response.json();
-        const botMessage = document.createElement("div");
-        botMessage.classList.add("message", "bot-message");
-        botMessage.innerText = data.response;
-        chatBox.appendChild(botMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const botMessage = { text: data.response, type: "bot-message" };
+        chatHistory.push(botMessage);
+        restoreChatHistory();
         if (audioEnabled) {
           speak(data.response);
         }
       } catch (error) {
-        const errorMessage = document.createElement("div");
-        errorMessage.classList.add("message", "bot-message");
-        errorMessage.innerText = "Oops, something went wrong! Try asking about college facilities or hostels. 😊🏫";
-        chatBox.appendChild(errorMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
+        const errorMessage = {
+          text: "Oops, something went wrong! Try asking about college facilities or hostels. 😊🏫",
+          type: "bot-message"
+        };
+        chatHistory.push(errorMessage);
+        restoreChatHistory();
         if (audioEnabled) {
-          speak(errorMessage.innerText);
+          speak(errorMessage.text);
         }
         console.error("Error:", error);
       } finally {
